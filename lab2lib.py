@@ -100,6 +100,7 @@ def neighborcsv(df, N, A, B, cutoff, name='neighbor.csv'):
 
     # Write file
     with open(name, "w", newline='') as f:
+        f.write("Atom_Index, Neighbour_Index, distance")
         for row in lst:
             f.write(f"{row[0]},{row[1]},{row[2]}\n")
 
