@@ -1,0 +1,1 @@
+ df = lab1lib.fcc_lattice(a, period)

@@ -58,20 +58,12 @@ def PBC_displacement(s, A, B):
 
     return vec
 
-def get_distance(vec):
-    """
-    Get magnitude of a vector
-    Argument:
-    - vec: a row matrix that contains the vector elements
-    """
-    distance = 0
-    for i in range(3):
-        # Calculate x^2 + y^2 + z^2
-        distance += (vec[i]) ** 2
+def PBC_distance(vec1, vec2, A, B):
+    distance = mathlib.get_mag(PBC_displacement(mathlib.vec_subtraction(vec1, vec2), A, B))
 
-    return distance ** 0.5
+    return distance
 
-def neighborcsv(df, N, A, B, cutoff, name='neighbor.csv'):
+def neighborcsv(df, N, A, B, cutoff, name='neighbor.csv', write=False):
     """
     Generate "neighbor.csv" that recorded all neighbor of each atom
     Argument:
@@ -83,26 +75,33 @@ def neighborcsv(df, N, A, B, cutoff, name='neighbor.csv'):
     """
     lst = []
     for i in range(N):
+        vec1 = df[i]
+        vec1 = vec1[1:]
+
         for j in range(N):
             # Skip if two atoms are the same
             if i == j:
                 continue
 
             # get values from i and j
-            vec1 = df[i]
             vec2 = df[j]
+            vec2 = vec2[1:]
 
             # After getting displacement from PBC condition, get the magnitude of that displacement vector
-            distance = get_distance(PBC_displacement(mathlib.vec_subtraction(vec1, vec2), A, B))
+            # round off to prevent overflow error
+            distance = round(PBC_distance(vec1, vec2, A, B), 5)
 
-            if distance <= cutoff and distance != 0:
+            if distance <= cutoff and distance > 0:
                 lst.append([i, j, distance])
 
     # Write file
-    with open(name, "w", newline='') as f:
-        f.write("Atom_Index, Neighbour_Index, distance")
-        for row in lst:
-            f.write(f"{row[0]},{row[1]},{row[2]}\n")
+    if write:
+        with open(name, "w", newline='') as f:
+            f.write("Atom_Index, Neighbour_Index, distance\n")
+            for row in lst:
+                f.write(f"{row[0]},{row[1]},{row[2]}\n")
+    else:
+        return lst
 
 def get_reciprocal(a):
     """
@@ -127,3 +126,20 @@ def get_reciprocal(a):
 
             b.append(lst) 
         return b
+    
+def construct_sim_box(period, a):
+    """
+    Following example in lab2.pptx
+    Generate a simulation box with lattice in size of period[0] x period[1] x period[2]
+    Argument:
+    - period: a row matrix that contains the periodicity in x, y, z direction
+    - a: lattice constant
+    """
+
+    A = [[period[0]*a, 0, 0],
+     [0, period[1]*a, 0],
+     [0, 0, period[2]*a]]
+
+    B = get_reciprocal(A)
+
+    return A, B

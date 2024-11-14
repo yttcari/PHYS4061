@@ -22,10 +22,15 @@ period[2] = int(input("Please input your period in z: "))
 - df: matrix that stores the coordinate vectors of each atom
 """
 if mode == 'sc':
-    df = lab1lib.sc_lattice(a, period)
+    corner = input("What is the type of your corner atom? ")
+    df = lab1lib.sc_lattice(a, period, corner)
 elif mode == 'fcc':
-    df = lab1lib.fcc_lattice(a, period)
+    corner = input("What is the type of your corner atom? ")
+    fcc = input("What is the type of your fcc atom? ")
+    df = lab1lib.fcc_lattice(a, period, corner, fcc)
 elif mode == 'bcc':
-    df = lab1lib.bcc_lattice(a, period)
+    corner = input("What is the type of your corner atom? ")
+    bcc = input("What is the type of your bcc atom? ")
+    df = lab1lib.bcc_lattice(a, period, corner, bcc)
 
-lab1lib.write_xyz(df, f'lab1_latticexyz/{mode}.xyz')
+lab1lib.write_xyz(df, f'lab3_datafile/{mode}.xyz')
