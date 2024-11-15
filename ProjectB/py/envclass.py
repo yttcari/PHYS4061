@@ -3,21 +3,48 @@ from tqdm import tqdm
 from raytracing_class import *
 import cv2
 import matplotlib.pyplot as plt
+from multiprocessing import Pool
 
-def render_object_color(ray, world):
+# Some useful funciton
+def render_object_color(r, world, depth):
 
+    if depth <= 0:
+        return color(0, 0, 0).rgb
+    
     t_interval = interval(0, np.inf)
 
-    hit_bool, rec = world.hit(ray, t_interval)
+    hit_bool, rec = world.hit(r, t_interval)
+
     if hit_bool:
-        return 0.5 * (rec.n.vec + 1)
+        # Object color
+        #direction = random_reflected_ray(rec.n).vec
+        target = rec.p.vec + rec.n.vec + random_reflected_ray().vec
+        new_ray = ray(to_point(rec.p.vec), to_vector(target - rec.p.vec))
+        #return 0.5 * (rec.n.vec + color(1, 1, 1).rgb)
+        #print(render_object_color(ray(to_point(rec.p.vec), to_vector(direction)), world, depth-1))
+        return 0.5 * render_object_color(new_ray, world, depth-1)
     else:
-        unit_dir = to_vector(ray.dir).unit_vector()
+        # Background color
+        unit_dir = to_vector(r.dir).unit_vector()
         a = 0.5 * (unit_dir.y + 1)
         return (1 - a) * color(1, 1, 1).rgb + a * color(0.5, 0.7, 1).rgb
+    
+def get_random_vector(min=-1, max=1):
+    """
+    Return vector object with random x, y, z
+    """
+    return vector(np.random.uniform(min, max), np.random.uniform(min, max), np.random.uniform(min, max))
+
+def random_reflected_ray():
+    # The rejection method to get a random point inside a unit radius sphere centred at origin
+    p = to_vector(get_random_vector().vec ** 2 - vector(1.0, 1.0, 1.0).vec)
+    while p.length() ** 2 >= 1.0:
+        p = to_vector(get_random_vector().vec ** 2 - vector(1.0, 1.0, 1.0).vec)
+    return p
+
 
 class camera:
-    def __init__(self, aspect_ratio, width, focal_length, viewport_height, centre, sample_ray_per_pixel=None):
+    def __init__(self, aspect_ratio, width, focal_length, viewport_height, centre, sample_ray_per_pixel=None, max_depth=10):
         self.aspect_ratio = aspect_ratio
         self.width = width
 
@@ -46,6 +73,7 @@ class camera:
 
         # Antialiasing
         self.sample_ray_per_pixel = sample_ray_per_pixel
+        self.max_depth = max_depth
         
 
     def render(self, world):
@@ -63,15 +91,23 @@ class camera:
                 
                 pixel_color = color(0, 0, 0).rgb
                 if self.sample_ray_per_pixel is not None:
-                    for sample_ray in range(self.sample_ray_per_pixel):
-                        r = self.get_ray(i, j)
-        
-                        pixel_color = render_object_color(r, world) + pixel_color
+                    # i.e. with antialiasing
+                    with Pool(4) as pool:
+                        for sample_ray in range(self.sample_ray_per_pixel):
+                            r = self.get_ray(i, j)
+            
+                            pixel_color = render_object_color(r, world, self.max_depth) + pixel_color
                     pixel_color /= self.sample_ray_per_pixel
                 else:
+                    # The pixel that is currently on (with some noise for antialiasing)
                     pixel_sample = self.pixel_origin + i * self.pixel_du + j * self.pixel_dv
+
+                    if j == 0 and i < 10:
+                        print(pixel_sample)
+                    # Generate rate that is emitted from the camera to the destinated pixel
                     r = ray(self.centre, to_vector(pixel_sample - self.centre.point))
-                    pixel_color = render_object_color(r, world) + pixel_color
+                    # Do ray tracing to get the color
+                    pixel_color = render_object_color(r, world, self.max_depth) + pixel_color
             
                 write_color(f, pixel_color)
 
@@ -87,8 +123,6 @@ class camera:
         r = ray(self.centre, to_vector(pixel_sample - self.centre.point))
 
         return r
-    
-
 
 def plot(image_path='image.ppm', customization=None, **kwargs):
     """

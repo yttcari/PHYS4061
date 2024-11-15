@@ -8,9 +8,17 @@ def to_vector(array):
 
     return vector(array[0], array[1], array[2])
 
+def to_point(array):
+    """
+    Take in 3d numpy array, change it to vector object:
+    """
+
+    return point(array[0], array[1], array[2])
+
 def gradient_color(r):
     # r is a ray object
     ray = vector(r.dir[0], r.dir[1], r.dir[2])
+    print(ray.unit_vector().y)
     a = 0.5 * (ray.unit_vector().y + 1)
 
     start_color = color(1, 1, 1)
@@ -118,9 +126,9 @@ class hit_record:
         """
         outward_normal should be a vector object
         """
-        ray_normal_intersect = np.dot(ray.dir, outward_normal.vec)
+        ray_normal_dot = np.dot(ray.dir, outward_normal.vec)
 
-        if ray_normal_intersect < 0:
+        if ray_normal_dot < 0:
             self.n = to_vector(-outward_normal.vec)
         else:
             self.n = outward_normal
@@ -158,9 +166,8 @@ class sphere:
         rec.t = root
         rec.p = ray.at(rec.t)
 
-        outward_normal = to_vector((rec.p.vec - self.centre) / self.radius)
-        rec.n = outward_normal
-        #rec.set_face_normal(ray, outward_normal)
+        rec.n = to_vector((rec.p.vec - self.centre) / self.radius)
+        rec.set_face_normal(ray, rec.n)
 
         return True, rec
     
