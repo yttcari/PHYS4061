@@ -5,6 +5,8 @@
 #include "mathlib.h"
 #include "obj.h"
 #include <stdbool.h>
+#include "sphere.h"
+#include "hittable.h"
 
 typedef struct{
     double aspect_ratio;
@@ -53,17 +55,17 @@ Camera init_Camera(double aspect_ratio, int width, double focal_length, int view
     return cam;
 }
 
-void render(char *path, Camera cam){
+void render(char *path, Camera cam, sphere_list s_list){
     FILE *fpt;
 
     fpt = fopen(path, "w");
+    hit_record rec;
 
     fprintf(fpt, "P3\n");
     fprintf(fpt, "%d %d\n", cam.width, cam.height);
     fprintf(fpt, "255\n");
-
-
     for(int j=0;j<cam.height;j++){
+
         for(int i=0; i<cam.height;i++){
             Vector pixel_centre = add_vec(point2vec(cam.pixel_origin), add_vec(scale_vec(cam.pixel_du, i), scale_vec(cam.pixel_dv, j)));
             Vector ray_direction = subtract_vec(pixel_centre, point2vec(cam.camera_centre));
@@ -71,7 +73,7 @@ void render(char *path, Camera cam){
             r.origin = cam.camera_centre;
             r.direction = ray_direction;
 
-            Color pixel_color = bg_color(r);
+            Color pixel_color = sphere_normal_color(r, s_list);
             write_color(pixel_color, fpt);
         }
     }

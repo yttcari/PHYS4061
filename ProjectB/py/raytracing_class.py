@@ -167,6 +167,7 @@ class sphere:
         rec.p = ray.at(rec.t)
 
         rec.n = to_vector((rec.p.vec - self.centre) / self.radius)
+        print(rec.n.vec)
         rec.set_face_normal(ray, rec.n)
 
         return True, rec

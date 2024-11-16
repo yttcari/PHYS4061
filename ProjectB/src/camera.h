@@ -4,6 +4,8 @@
 #include "color.h"
 #include "obj.h"
 #include <stdbool.h>
+#include "sphere.h"
+#include "hittable.h"
 
 #ifndef CAMERA_H
 #define CAMERA_H
@@ -28,5 +30,5 @@ typedef struct{
 
 Camera init_Camera(double aspect_ratio, int width, double focal_length, int viewport_height, Point centre, int sample_ray_per_pixel, int max_depth);
 
-void render(char *path, Camera cam);
+void render(char *path, Camera cam, sphere_list s_list);
 #endif

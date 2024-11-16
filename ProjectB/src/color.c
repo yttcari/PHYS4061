@@ -2,6 +2,8 @@
 #include "ray.h"
 #include "obj.h"
 #include "mathlib.h"
+#include "sphere.h"
+#include "hittable.h"
 
 typedef struct{
     double r;
@@ -39,14 +41,6 @@ Color vec2color(Vector vec){
     return color;
 }
 
-Color ray_color(Ray r){
-    return to_color(0, 0, 0);
-}
-
-void write_color(Color color, FILE *fpt){
-    fprintf(fpt, "%d %d %d\n", (int) round(color.r * 255.999), (int) round(color.g * 255.999), (int) round(color.b * 255.999));
-}
-
 Color bg_color(Ray r){
     Vector unit_direction = scale_vec(r.direction, 1./get_magnitude(r.direction));
     double a = 0.5 * (unit_direction.y + 1);
@@ -55,4 +49,18 @@ Color bg_color(Ray r){
     Vector end_color_vector = scale_vec(to_vector(0.5, 0.7, 1), a);
 
     return vec2color(add_vec(start_color_vector, end_color_vector));
+}
+
+Color sphere_normal_color(Ray r, sphere_list s_list){
+    hit_record rec = init_rec();
+
+    if (check_hit_sphere_list(s_list, r, 0, INFINITY, &rec)){
+        return vec2color(scale_vec(add_vec(rec.n, to_vector(1., 1., 1.)), 0.5));
+    } else{
+        return bg_color(r);
+    }
+}
+
+void write_color(Color color, FILE *fpt){
+    fprintf(fpt, "%d %d %d\n", (int) round(color.r * 255.999), (int) round(color.g * 255.999), (int) round(color.b * 255.999));
 }

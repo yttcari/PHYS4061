@@ -2,6 +2,8 @@
 #include "ray.h"
 #include "obj.h"
 #include "mathlib.h"
+#include "sphere.h"
+#include "hittable.h"
 
 #ifndef COLOR_H
 #define COLOR_H
@@ -18,4 +20,6 @@ void write_color(Color color, FILE *fpt);
 Vector color2vec(Color color);
 Color vec2color(Vector vec);
 Color ray_color(Ray r);
+Color sphere_normal_color(Ray r, sphere_list s_list);
+Color to_color(double r, double g, double b);
 #endif
